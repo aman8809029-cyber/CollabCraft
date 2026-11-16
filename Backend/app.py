@@ -38,6 +38,17 @@ _AUTH_USER_CACHE_SECONDS = 30
 _AUTH_USER_CACHE_LIMIT = 500
 
 
+def is_admin_user(user):
+    """Check the signed-in email against the server-only admin allowlist."""
+    email = str(getattr(user, "email", "") or "").strip().casefold()
+    admin_emails = {
+        item.strip().casefold()
+        for item in os.getenv("COLLABCRAFT_ADMIN_EMAILS", "").split(",")
+        if item.strip()
+    }
+    return bool(email and email in admin_emails)
+
+
 def uppercase_content(value):
     """Normalize user-authored content to the app's uppercase writing style."""
     return str(value or "").strip().upper()
@@ -280,6 +291,7 @@ def get_project(project_id):
         project.pop("owner_id", None)
         project["can_view_project_area"] = can_view_project_area
         project["can_manage_project"] = bool(viewer and str(viewer.id) == owner_id)
+        project["can_admin_delete"] = bool(viewer and is_admin_user(viewer))
         creator = None
         if can_view_contacts:
             creator = auth_user_by_id(owner_id)
@@ -879,6 +891,55 @@ def create_project():
             except Exception:
                 app.logger.exception("Could not clean up a project after role insertion failed")
         return jsonify(error="Could not publish the project. Check the backend log and database schema."), 500
+
+
+@app.delete("/api/admin/projects/<int:project_id>")
+def admin_delete_project(project_id):
+    """Permanently remove a project. Only configured CollabCraft admins may do this."""
+    if supabase is None or supabase_admin is None:
+        return jsonify(error="Backend Supabase settings are incomplete."), 503
+    try:
+        user = authenticated_user()
+        if user is None:
+            return jsonify(error="Sign in with the administrator account to delete projects."), 401
+        if not is_admin_user(user):
+            return jsonify(error="Only a CollabCraft administrator can delete projects."), 403
+
+        project = supabase_admin.table("projects").select("id").eq(
+            "id", project_id
+        ).maybe_single().execute().data
+        if not project:
+            return jsonify(error="Project not found."), 404
+
+        # Collect private uploaded files before the database cascades remove their rows.
+        storage_paths = []
+        try:
+            work_items = supabase_admin.table("project_work_items").select(
+                "storage_path"
+            ).eq("project_id", project_id).execute().data
+            storage_paths = [item["storage_path"] for item in work_items if item.get("storage_path")]
+        except Exception as storage_query_error:
+            if getattr(storage_query_error, "code", None) not in {"42P01", "PGRST205"}:
+                raise
+            app.logger.info("Project work area is not installed; skipping project file cleanup")
+
+        # This is one database DELETE statement: configured foreign-key cascades remove
+        # related roles, applications, memberships, chat, and workspace rows atomically.
+        deleted = supabase_admin.table("projects").delete().eq(
+            "id", project_id
+        ).select("id").execute().data
+        if not deleted:
+            return jsonify(error="Project not found."), 404
+
+        if storage_paths:
+            try:
+                supabase_admin.storage.from_("collabcraft-work").remove(storage_paths)
+            except Exception:
+                app.logger.exception("Project was deleted, but private work files could not be cleaned up")
+        return jsonify(message="Project deleted.", project_id=project_id)
+    except Exception:
+        app.logger.exception("Could not delete project %s", project_id)
+        return jsonify(error="Could not delete this project. Check backend logs for a database relationship error."), 500
 
 
 @app.post("/api/applications")

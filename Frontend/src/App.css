@@ -329,6 +329,10 @@ a { color: inherit; text-decoration: none; }
 .complete-button { min-height: 34px; padding: 0 11px; border: 1px solid #3d604c; border-radius: 8px; color: #b8e1c6; background: #1d2b23; font-size: 11px; cursor: pointer; }
 .complete-button:hover:not(:disabled) { border-color: #72a582; background: #263c2e; }
 .complete-button:disabled { opacity: .6; cursor: wait; }
+.danger-button { min-height: 36px; padding: 0 12px; border: 1px solid #7a3e50; border-radius: 8px; color: #ffd9e0; background: #351a23; font-size: 11px; font-weight: 650; cursor: pointer; }
+.danger-button:hover:not(:disabled) { border-color: #d16b83; background: #4a202c; }
+.danger-button:disabled { opacity: .6; cursor: wait; }
+.project-delete-trigger { align-self: center; }
 .creator-project-controls { padding: 16px; border: 1px solid #3d3446; border-radius: 10px; background: rgba(36,29,45,.8); }
 .creator-project-controls h3 { margin: 0 0 6px; color: #eee7f5; font-size: 13px; }
 .creator-project-controls p { color: #9d93a5; font-size: 10px; line-height: 1.5; }

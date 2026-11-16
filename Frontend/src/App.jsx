@@ -21,6 +21,18 @@ function roleOpenings(role) {
   return Math.max(0, Number(role.slots_total || 0) - Number(role.slots_filled || 0));
 }
 
+function authErrorMessage(error, fallback) {
+  const code = String(error?.code || "").toLowerCase();
+  const message = String(error?.message || "");
+  if (code === "over_email_send_rate_limit" || /email rate limit exceeded/i.test(message)) {
+    return "The signup email limit has been reached. Please try again later. The site owner needs to configure custom SMTP to send confirmation emails reliably.";
+  }
+  if (code === "email_address_not_authorized" || /email address not authorized/i.test(message)) {
+    return "Supabase’s default email service can’t send to this address. The site owner needs to configure custom SMTP for public sign-up.";
+  }
+  return message || fallback;
+}
+
 function ProjectCard({ project, onOpen }) {
   const roles = project.project_roles || [];
   const stack = Array.isArray(project.tech_stack) ? project.tech_stack : [];
@@ -190,6 +202,7 @@ export default function App() {
   const [signingOut, setSigningOut] = useState(false);
   const [notice, setNotice] = useState("");
   const [selectedProject, setSelectedProject] = useState(null);
+  const [deletingProject, setDeletingProject] = useState(false);
   const [projectEditOpen, setProjectEditOpen] = useState(false);
   const [savingProjectEdit, setSavingProjectEdit] = useState(false);
   const [projectEditMessage, setProjectEditMessage] = useState("");
@@ -499,7 +512,7 @@ export default function App() {
         if (applyTarget) setApplyOpen(true);
       }, 700);
     } catch (error) {
-      setAuthMessage(error?.message || "Sign-in failed. Check your email and password.");
+      setAuthMessage(authErrorMessage(error, "Sign-in failed. Check your email and password."));
     } finally {
       setSigningIn(false);
     }
@@ -531,7 +544,7 @@ export default function App() {
         setAuthMessage("Account created. Check your email to confirm it, then sign in.");
       }
     } catch (error) {
-      setAuthMessage(error?.message || "Could not create your account.");
+      setAuthMessage(authErrorMessage(error, "Could not create your account."));
     } finally {
       setSigningUp(false);
     }
@@ -745,6 +758,35 @@ export default function App() {
       setNotice(statusError?.message || "Could not update project status.");
     } finally {
       setChangingProjectStatus(false);
+    }
+  }
+
+  async function deleteProjectAsAdmin(project) {
+    if (!session?.access_token || !project?.can_admin_delete || deletingProject) return;
+    const confirmed = window.confirm(
+      `Permanently delete “${project.title}” and its related roles, applications, team data, and work area? This cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingProject(true);
+    try {
+      const response = await fetch(`${API_URL}/api/admin/projects/${project.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || `Request failed (${response.status})`);
+      setProjects((current) => current.filter((item) => String(item.id) !== String(project.id)));
+      setMyProjects((current) => current.filter((item) => String(item.id) !== String(project.id)));
+      setOwnerApplications((current) => current.filter((item) => String(item.project_id) !== String(project.id)));
+      setMyApplications((current) => current.filter((item) => String(item.project_id) !== String(project.id)));
+      setProjectEditOpen(false);
+      setSelectedProject(null);
+      setNotice(`Project “${project.title}” was deleted.`);
+    } catch (deleteError) {
+      setNotice(deleteError?.message || "Could not delete this project.");
+    } finally {
+      setDeletingProject(false);
     }
   }
 
@@ -1147,6 +1189,7 @@ export default function App() {
               <div className="project-detail-toolbar-actions">
                 <button className="back-link project-back" type="button" onClick={closeProjectDetails}>← Back to Projects</button>
                 {selectedProject.can_manage_project && <button className="outline-button project-edit-trigger" type="button" onClick={() => projectEditOpen ? setProjectEditOpen(false) : beginProjectEdit(selectedProject)}>{projectEditOpen ? "Cancel Editing" : "Edit Project Details"}</button>}
+                {selectedProject.can_admin_delete && <button className="danger-button project-delete-trigger" type="button" disabled={deletingProject} onClick={() => deleteProjectAsAdmin(selectedProject)}>{deletingProject ? "Deleting…" : "Delete project"}</button>}
               </div>
               <button className="modal-close" type="button" aria-label="Close project details" onClick={closeProjectDetails}>×</button>
             </div>
