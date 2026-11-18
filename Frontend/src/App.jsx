@@ -996,7 +996,7 @@ export default function App() {
     <div className="cc-app">
       <header className="topbar">
         <a className="brand" href="#explore" aria-label="CollabCraft home">
-          <span className="brand-mark">CC</span><span>CollabCraft</span>
+          <img className="brand-logo" src="/collabcraft-logo.svg" alt="" />
         </a>
         <nav className="main-nav" aria-label="Main navigation">
           <button className={`nav-link ${activeView === "explore" ? "active" : ""}`} type="button" onClick={() => setActiveView("explore")}>Explore</button>

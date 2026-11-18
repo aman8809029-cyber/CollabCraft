@@ -52,8 +52,8 @@ a { color: inherit; text-decoration: none; }
   background: rgba(13, 11, 19, .88);
   backdrop-filter: blur(16px);
 }
-.brand { display: inline-flex; align-items: center; gap: 12px; width: fit-content; font-size: 16px; font-weight: 700; letter-spacing: -.035em; }
-.brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #4b385e; border-radius: 11px; color: var(--purple-bright); background: #21182c; font-size: 10px; font-weight: 800; letter-spacing: -.06em; }
+.brand { display: inline-flex; align-items: center; width: fit-content; flex: 0 0 auto; }
+.brand-logo { display: block; width: 176px; height: 36px; object-fit: contain; object-position: left center; }
 .main-nav { height: 100%; display: flex; align-items: center; gap: 10px; }
 .nav-link { position: relative; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 0 17px; border: 0; border-radius: 10px; color: #aaa3b5; background: transparent; font-size: 12px; font-weight: 500; cursor: pointer; transition: color .18s, background .18s; }
 .nav-link:hover { color: var(--text); background: rgba(255,255,255,.045); }
@@ -555,8 +555,7 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 620px) {
   .topbar { height: auto; min-height: 106px; padding: 12px 17px 7px; }
   .project-details-backdrop, .create-backdrop, .apply-backdrop { top: 106px; }
-  .brand { font-size: 14px; }
-  .brand-mark { width: 31px; height: 31px; }
+  .brand-logo { width: 150px; height: 32px; }
   .main-nav { justify-content: space-between; gap: 2px; }
   .nav-link { min-height: 38px; padding: 0 9px; font-size: 11px; }
   .nav-link.active::after { right: 13px; left: 13px; bottom: -3px; }

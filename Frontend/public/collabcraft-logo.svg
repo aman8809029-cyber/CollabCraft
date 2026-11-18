@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="256" viewBox="0 0 640 128" role="img" aria-labelledby="title desc">
+  <title id="title">CollabCraft logo for dark backgrounds</title><desc id="desc">Two linked C letters in a rounded purple mark beside the CollabCraft wordmark.</desc>
+  <defs><linearGradient id="tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#321f46"/><stop offset="1" stop-color="#1b1425"/></linearGradient><linearGradient id="stroke" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b887f2"/><stop offset="1" stop-color="#8050b8"/></linearGradient></defs>
+  <g transform="translate(8 12)"><rect x="0" y="0" width="104" height="104" rx="27" fill="url(#tile)" stroke="url(#stroke)" stroke-width="2"/><path d="M51 31H43a21 21 0 1 0 0 42h8" fill="none" stroke="#c79af3" stroke-width="8" stroke-linecap="round"/><path d="M53 39h8a21 21 0 1 1 0 42h-8" fill="none" stroke="#8fe0cb" stroke-width="8" stroke-linecap="round"/><circle cx="52" cy="56" r="4" fill="#f6f1fa"/></g>
+  <text x="140" y="84" font-family="Arial, Helvetica, sans-serif" font-size="60" font-weight="700" letter-spacing="-2"><tspan fill="#f6f1fa">Collab</tspan><tspan fill="#c79af3">Craft</tspan></text>
+</svg>
